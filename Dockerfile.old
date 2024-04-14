@@ -1,0 +1,46 @@
+# Use an official Python runtime as a parent image
+FROM python:3.9-slim
+
+# Set the working directory in the container to /app
+WORKDIR /app
+
+# Ensure the package lists are updated, upgrade the system, and install dependencies
+ENV CHROME_VERSION=123.0.6312.105
+RUN apt-get update && apt-get -y upgrade && apt-get install -y \
+    wget \
+    gnupg2 \
+    software-properties-common \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Add Google Chrome's official GPG key
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
+
+# Add the Google Chrome repository
+RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google.list'
+
+# Install Google Chrome
+RUN apt-get update && apt-get install -y google-chrome-stable && rm -rf /var/lib/apt/lists/*
+
+
+
+
+# Install a specific version of ChromeDriver that matches the Google Chrome version
+# Replace "90.0.4430.85" with the version of ChromeDriver compatible with your version of Google Chrome
+RUN wget -q --continue -P /chromedriver "https://storage.googleapis.com/chrome-for-testing-public/123.0.6312.105/linux64/chromedriver-linux64.zip" \
+    && unzip /chromedriver/chromedriver* -d /usr/local/bin/ \
+    && rm -rf /chromedriver
+
+# Copy the current directory contents into the container at /app
+COPY . /app
+
+# Install any needed packages specified in requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Make port 80 available to the world outside this container
+EXPOSE 80
+
+# Run your script when the container launches
+CMD ["python", "./m12_utilization.py"]
+CMD ["python", "./matsya_utilization.py"]
+
